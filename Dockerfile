@@ -186,6 +186,7 @@ RUN apt-get -y install \
     python3-dev \
     python3-pip \
     python3-tk \
+    python3-gi-cairo \
     python3-setuptools \
     screen \
     source-highlight \
@@ -285,8 +286,8 @@ RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/eq
     tar -xvvf clig-1.9.11.2.tar.xz && \
     git clone https://github.com/SixByNine/psrxml.git && \
     git clone https://bitbucket.org/psrsoft/tempo2.git && \
-    git clone https://github.com/rwharton/tempo.git && \
-    git clone https://github.com/rwharton/prepfil_dsn.git prepfil && \
+    git clone https://github.com/gdesvignes/tempo.git && \
+    git clone https://github.com/rwharton/test_prepfil.git prepfil && \
     git clone https://github.com/rwharton/psrchive_dsn.git psrchive && \
     git clone https://github.com/rwharton/sigproc_dsn_mod.git sigproc && \
     git clone https://github.com/ewanbarr/sigpyproc.git && \
@@ -358,7 +359,10 @@ RUN ./prepare && \
     ./configure --prefix=$PSRHOME/tempo && \
     make && \
     make install
-
+# Add DSN obs to obsys.dat
+RUN echo "-4460894.947   2682367.17     -3674745.22      1  CANBERRA            n  CN" >> obsys.dat && \
+    echo "-2353621.22    -4641341.52     3677052.352     1  GOLDSTONE           q  GS" >> obsys.dat && \ 
+    echo " 4849093.992    -360191.27      4115107.66     1  ROBLEDO             j  RO" >> obsys.dat
 
 # tempo2
 ENV TEMPO2=$PSRHOME"/tempo2/T2runtime" \
