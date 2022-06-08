@@ -8,8 +8,6 @@
 # inform receipients that you have modified the original work.
 
 
-
-
 FROM ubuntu:focal
 
 MAINTAINER Robert Wharton "rswharton95@gmail.com"
@@ -253,7 +251,8 @@ RUN pip3 install pip -U && \
     pip3 install dyPolyChord -U && \
     pip3 install lmfit -U && \
     pip3 install PyWavelets -U && \
-    pip3 install numba -U
+    pip3 install numba -U && \
+    pip3 install your 
 
 # Set python3 as default version
 RUN update-alternatives --install  /usr/bin/python python /usr/bin/python3 1
@@ -271,9 +270,9 @@ RUN mkdir -p /home/psr/software
 WORKDIR $PSRHOME
 RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/equipes/asd/calceph/calceph-2.3.2.tar.gz && \
     tar -xvvf calceph-2.3.2.tar.gz -C $PSRHOME && \
-    wget  http://ds9.si.edu/download/ubuntu20/ds9.ubuntu20.8.2.1.tar.gz && \
-    mkdir $PSRHOME/ds9-8.2 && \
-    tar -xvvf ds9.ubuntu20.8.2.1.tar.gz -C $PSRHOME/ds9-8.2 && \
+    wget  https://ds9.si.edu/download/ubuntu20/ds9.ubuntu20.8.3.tar.gz && \
+    mkdir $PSRHOME/ds9-8.3 && \
+    tar -xvvf ds9.ubuntu20.8.3.tar.gz -C $PSRHOME/ds9-8.3 && \
     wget http://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/fv/fv5.4_pc_linux64.tar.gz && \
     tar -xvvf fv5.4_pc_linux64.tar.gz -C $PSRHOME && \
     wget http://www.atnf.csiro.au/people/pulsar/psrcat/downloads/psrcat_pkg.tar.gz && \
@@ -287,11 +286,10 @@ RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/eq
     git clone https://github.com/SixByNine/psrxml.git && \
     git clone https://bitbucket.org/psrsoft/tempo2.git && \
     git clone https://github.com/gdesvignes/tempo.git && \
-    git clone https://github.com/rwharton/test_prepfil.git prepfil && \
+    git clone https://github.com/rwharton/prepfil_dsn.git prepfil && \
     git clone https://github.com/rwharton/psrchive_dsn.git psrchive && \
     git clone https://github.com/rwharton/sigproc_dsn_mod.git sigproc && \
     git clone https://github.com/ewanbarr/sigpyproc.git && \
-    #git clone https://github.com/rwharton/dspsr_dsn.git dspsr && \
     git clone https://git.code.sf.net/p/dspsr/code dspsr && \ 
     git clone https://github.com/weltevrede/psrsalsa.git && \
     git clone https://github.com/rwharton/presto.git && \
@@ -308,6 +306,10 @@ RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/eq
     git clone https://github.com/demorest/tempo_utils &&\
     git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" 
 
+
+###############################
+####  START INSTALLATIONS  ####
+###############################
 
 # PGPLOT
 ENV PGPLOT_DIR="/usr/lib/pgplot5" \
@@ -329,7 +331,7 @@ ENV PGPLOT_DIR="/usr/lib/pgplot5" \
 #    make install
 
 # ds9
-ENV PATH $PATH:$PSRHOME/ds9-7.5
+ENV PATH $PATH:$PSRHOME/ds9-8.3
 
 # fv
 ENV PATH $PATH:$PSRHOME/fv5.4
@@ -411,7 +413,6 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PSRHOME"/epsic/install/lib" \
     CFLAGS="-I ${PSRHOME}/epsic/install/include/epsic" 
 
 
-
 # PSRCHIVE
 ENV PSRCHIVE=$PSRHOME"/psrchive/install" \
     PATH=$PATH:$PSRHOME"/psrchive/install/bin" \
@@ -419,18 +420,11 @@ ENV PSRCHIVE=$PSRHOME"/psrchive/install" \
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PSRHOME"/psrchive/install/lib" \
     PYTHONPATH=$PYTHONPATH:$PSRHOME"/psrchive/install/lib/python3.8/site-packages"
 
-
 WORKDIR $PSRHOME/psrchive/
 
 RUN ./configure --prefix=$PSRCHIVE --x-libraries=/usr/lib/x86_64-linux-gnu --with-psrxml-dir=$PSRXML/install --enable-shared --enable-static F77=gfortran LDFLAGS="-L"$PSRXML"/install/lib" LIBS="-lpsrxml -lxml2" && \
     make -j $(nproc) && \
-    make install 
-
-#RUN ./bootstrap && \
-#    ./configure --prefix=$PSRCHIVE --x-libraries=/usr/lib/x86_64-linux-gnu --with-psrxml-dir=$PSRXML/install --enable-shared --enable-static F77=gfortran LDFLAGS="-L"$PSRXML"/install/lib" LIBS="-lpsrxml -lxml2" && \
-#    make -j $(nproc) && \
-#    make install 
-
+    make install
 
 WORKDIR $HOME
 RUN $PSRCHIVE/bin/psrchive_config >> .psrchive.cfg && \
@@ -507,7 +501,6 @@ WORKDIR $PRESTO
 RUN pip install .
 
 
-
 # psrfits2psrfits
 ENV PSRFITS2PSRFITS=$PSRHOME"/psrfits2psrfits" \
     PATH=$PATH:$PSRHOME"/psrfits2psrfits"
@@ -541,10 +534,8 @@ RUN python3 setup.py install --record list.txt --user
 # RUN wget http://www.star.bris.ac.uk/~mbt/topcat/topcat-full.jar 
 
 #Zsh commands
-
 RUN rm -rf /home/psr/.zprezto && zsh -c 'git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"' && \
 zsh -c 'setopt EXTENDED_GLOB && for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"; done '
-
 
 RUN curl -L https://iterm2.com/shell_integration/zsh -o ~/.iterm2_shell_integration.zsh && \
 curl -L https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash
@@ -614,6 +605,14 @@ RUN python3 setup.py install --record list.txt --user
 #RUN /bin/bash -c "source bin/thisroot.sh"
 #USER psr
 
+
+
+#############################
+####  END INSTALLATIONS  ####
+#############################
+
+
+
 # Clean downloaded source codes
 WORKDIR $PSRHOME
 RUN rm -rf ./*.bz2 ./*.gz ./*.xz ./*.ztar ./*.zip
@@ -665,7 +664,7 @@ RUN echo "" >> .bashrc && \
     echo "" >> .mysetenv.bash && \
 
     echo "# ds9" >> .mysetenv.bash && \
-    echo "export PATH=\$PATH:\$PSRHOME/ds9-7.5" >> .mysetenv.bash && \
+    echo "export PATH=\$PATH:\$PSRHOME/ds9-8.3" >> .mysetenv.bash && \
     echo "" >> .mysetenv.bash && \
 
     echo "# fv" >> .mysetenv.bash && \
@@ -782,6 +781,10 @@ RUN echo "" >> .bashrc && \
     echo "export FITORBIT=\$PSRHOME/fitorbit" >> .mysetenv.bash && \
     echo "export PATH=\$PATH:\$FITORBIT/bin" >> .mysetenv.bash && \
     echo "export fitorbitdir=\$PSRHOME/fitorbit/src/" >> .mysetenv.bash && \
+
+    echo "# Pulse Portraiture" >> .mysetenv.bash && \
+    echo "export PP=\$PSRHOME/PulsePortraiture" >> .mysetenv.bash && \
+    echo "export PYTHONPATH=\$PYTHONPATH:\$PP/" >> .mysetenv.bash && \
 
     echo "# Pulse Portraiture" >> .mysetenv.bash && \
     echo "export PP=\$PSRHOME/PulsePortraiture" >> .mysetenv.bash && \
