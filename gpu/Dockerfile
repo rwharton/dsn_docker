@@ -274,6 +274,11 @@ ENV PSRHOME /home/psr/software
 ENV OSTYPE linux
 RUN mkdir -p /home/psr/software
 
+# Define GPU env var which sets the compatability
+# code for your GPU.  This is the number after "sm_" in
+# e.g., "sm_60".
+ENV GPU 61
+
 # Downloading all source codes
 WORKDIR $PSRHOME
 RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/equipes/asd/calceph/calceph-2.3.2.tar.gz && \
@@ -405,7 +410,8 @@ RUN sed -i -e '/New telescopes/a\' -e ' -2353621.     -4641341.4       3677052.2
 
 ## PREPFIL
 WORKDIR $PSRHOME/prepfil/filterbank_utils
-RUN mkdir build
+RUN sed -i "/gencode/c\    set(CUDA_NVCC_FLAGS \${CUDA_NVCC_FLAGS};-gencode arch=compute_${GPU},code=sm_${GPU})" CMakeLists.txt && \
+    mkdir build
 WORKDIR $PSRHOME/prepfil/filterbank_utils/build
 RUN cmake -DCMAKE_INSTALL_PREFIX=$PSRHOME/prepfil/filterbank_utils/install .. && \
     make -j8 && \
@@ -515,7 +521,8 @@ RUN pip install .
 
 # Install dedisp
 WORKDIR $PSRHOME/dedisp
-RUN make && \
+RUN sed -i "/GPU_ARCH/c\GPU_ARCH   = sm_${GPU}" Makefile.inc && \
+    make && \
     make install
 
 # Install PSRDADA
