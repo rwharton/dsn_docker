@@ -54,12 +54,12 @@ relevant drivers installed and `nvidia-docker`:
 Before building the Dockerfile, you will (potentially) need to change 
 line 280:
 
-    `ENV GPU 61`
+    ENV GPU 61
 
 The number here is the compute compatability code for your GPU.  To 
 find what GPU is installed on your computer just use:
 
-    `nvidia-smi -L`
+    nvidia-smi -L
 
 You can then find the relevant code by looking up your GPU either 
 [here](https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/) 
