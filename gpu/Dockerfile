@@ -253,20 +253,23 @@ RUN pip3 install pip -U && \
     pip3 install lmfit -U && \
     pip3 install PyWavelets -U && \
     pip3 install numba -U && \
+    pip3 install pint-pulsar -U && \
+    pip3 install numdifftools -U && \
     pip3 install your && \
+    pip3 install click && \
     pip3 install testresources -U && \
     pip3 install typing-extensions -U  && \
     pip3 install 'protobuf~=3.19.0' && \
-    pip3 install tensorflow==2.5 && \
-    pip3 install tensorflow-gpu==2.5 && \
-    pip3 install keras==2.4  && \
+    #pip3 install tensorflow==2.5 && \
+    #pip3 install tensorflow-gpu==2.5 && \
+    #pip3 install keras==2.4  && \
     pip3 install rich==12.0
 
 # Set python3 as default version
 RUN update-alternatives --install  /usr/bin/python python /usr/bin/python3 1
 
 # Switch account to psr
-USER psr
+#USER psr
 
 # Define home, psrhome, OSTYPE and create the directory
 ENV HOME /home/psr
@@ -277,15 +280,15 @@ RUN mkdir -p /home/psr/software
 # Define GPU env var which sets the compatability
 # code for your GPU.  This is the number after "sm_" in
 # e.g., "sm_60".
-ENV GPU 61
+ENV GPU 86
 
 # Downloading all source codes
 WORKDIR $PSRHOME
 RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/equipes/asd/calceph/calceph-2.3.2.tar.gz && \
     tar -xvvf calceph-2.3.2.tar.gz -C $PSRHOME && \
-    wget  https://ds9.si.edu/download/ubuntu20/ds9.ubuntu20.8.3.tar.gz && \
-    mkdir $PSRHOME/ds9-8.3 && \
-    tar -xvvf ds9.ubuntu20.8.3.tar.gz -C $PSRHOME/ds9-8.3 && \
+    wget  https://ds9.si.edu/download/ubuntu20/ds9.ubuntu20.8.5.tar.gz && \
+    mkdir $PSRHOME/ds9-8.5 && \
+    tar -xvvf ds9.ubuntu20.8.5.tar.gz -C $PSRHOME/ds9-8.5 && \
     wget http://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/fv/fv5.4_pc_linux64.tar.gz && \
     tar -xvvf fv5.4_pc_linux64.tar.gz -C $PSRHOME && \
     wget http://www.atnf.csiro.au/people/pulsar/psrcat/downloads/psrcat_pkg.tar.gz && \
@@ -294,13 +297,14 @@ RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/eq
     tar -xvvf szip-2.1.1.tar.gz && \
     wget https://www.hdfgroup.org/ftp/HDF5/tools/h5check/src/h5check-2.0.1.tar.gz && \
     tar -xvvf h5check-2.0.1.tar.gz && \
-    wget -U 'Linux' https://bsdforge.com/projects/devel/clig/src/clig-1.9.11.2.tar.xz && \
-    tar -xvvf clig-1.9.11.2.tar.xz && \
+    #wget -U 'Linux' https://bsdforge.com/projects/devel/clig/src/clig-1.9.11.2.tar.xz && \
+    #tar -xvvf clig-1.9.11.2.tar.xz && \
     git clone https://github.com/SixByNine/psrxml.git && \
     git clone https://bitbucket.org/psrsoft/tempo2.git && \
     git clone https://github.com/gdesvignes/tempo.git && \
     git clone https://github.com/rwharton/prepfil_dsn.git prepfil && \
-    git clone https://github.com/rwharton/psrchive_dsn.git psrchive && \
+    #git clone https://github.com/rwharton/psrchive_dsn.git psrchive && \
+    git clone git://git.code.sf.net/p/psrchive/code psrchive && \
     git clone https://github.com/rwharton/sigproc_dsn_mod.git sigproc && \
     git clone https://github.com/ewanbarr/sigpyproc.git && \
     git clone https://git.code.sf.net/p/dspsr/code dspsr && \
@@ -328,6 +332,8 @@ RUN wget --no-check-certificate https://www.imcce.fr/content/medias/recherche/eq
 ####  START INSTALLATIONS  ####
 ###############################
 
+#USER root
+
 # PGPLOT
 ENV PGPLOT_DIR="/usr/lib/pgplot5" \
     PGPLOT_FONT="/usr/lib/pgplot5/grfont.dat" \
@@ -348,7 +354,7 @@ ENV PGPLOT_DIR="/usr/lib/pgplot5" \
 #    make install
 
 # ds9
-ENV PATH $PATH:$PSRHOME/ds9-8.3
+ENV PATH $PATH:$PSRHOME/ds9-8.5
 
 # fv
 ENV PATH $PATH:$PSRHOME/fv5.4
@@ -440,9 +446,14 @@ ENV PSRCHIVE=$PSRHOME"/psrchive/install" \
 
 WORKDIR $PSRHOME/psrchive/
 
-RUN ./configure --prefix=$PSRCHIVE --x-libraries=/usr/lib/x86_64-linux-gnu --with-psrxml-dir=$PSRXML/install --enable-shared --enable-static F77=gfortran LDFLAGS="-L"$PSRXML"/install/lib" LIBS="-lpsrxml -lxml2" && \
+RUN ./bootstrap && \
+    ./configure --prefix=$PSRCHIVE --x-libraries=/usr/lib/x86_64-linux-gnu --with-psrxml-dir=$PSRXML/install --enable-shared --enable-static F77=gfortran LDFLAGS="-L"$PSRXML"/install/lib" LIBS="-lpsrxml -lxml2" && \
     make -j $(nproc) && \
     make install
+
+#RUN ./configure --prefix=$PSRCHIVE --x-libraries=/usr/lib/x86_64-linux-gnu --with-psrxml-dir=$PSRXML/install --enable-shared --enable-static F77=gfortran LDFLAGS="-L"$PSRXML"/install/lib" LIBS="-lpsrxml -lxml2" && \
+#    make -j $(nproc) && \
+#    make install
 
 WORKDIR $HOME
 RUN $PSRCHIVE/bin/psrchive_config >> .psrchive.cfg && \
@@ -486,13 +497,13 @@ RUN ./bootstrap && \
     make install
 
 # clig
-ENV CLIG=$PSRHOME"/clig" \
-    PATH=$PATH:$PSRHOME"/clig/instal/bin" \
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PSRHOME"/clig/instal/lib"
-WORKDIR $CLIG
-RUN sed -i 's|prefix =/usr|prefix=$(CLIG)/instal|g' makefile && \
-    make && \
-    make install
+#ENV CLIG=$PSRHOME"/clig" \
+#    PATH=$PATH:$PSRHOME"/clig/instal/bin" \
+#    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PSRHOME"/clig/instal/lib"
+#WORKDIR $CLIG
+#RUN sed -i 's|prefix =/usr|prefix=$(CLIG)/instal|g' makefile && \
+#    make && \
+#    make install
 
 # PSRSALSA
 ENV PSRSALSA=$PSRHOME"/psrsalsa" \
@@ -502,7 +513,6 @@ WORKDIR $PSRSALSA
 RUN sed -i.backup -e's/GSLFLAGS =.*/GSLFLAGS = -DGSL_VERSION_NUMBER=203/' Makefile && \
     make -j $(nproc) && \
     make
-
 
 # PRESTO 3
 ENV PRESTO=$PSRHOME"/presto" \
@@ -516,6 +526,7 @@ RUN make prep && \
     make && \
     make mpi
 WORKDIR $PRESTO
+
 RUN pip install .
 
 
@@ -538,11 +549,11 @@ RUN ./bootstrap && \
     make install
 
 # Install fetch
-USER root
-WORKDIR $PSRHOME/fetch
-RUN pip3 install -r requirements.txt && \
-    python -m pip install .
-USER psr
+#USER root
+#WORKDIR $PSRHOME/fetch
+#RUN pip3 install -r requirements.txt && \
+#    python -m pip install .
+#USER psr
 
 # psrfits2psrfits
 ENV PSRFITS2PSRFITS=$PSRHOME"/psrfits2psrfits" \
@@ -654,7 +665,7 @@ RUN python3 setup.py install --record list.txt --user
 ####  END INSTALLATIONS  ####
 #############################
 
-
+#USER psr
 
 # Clean downloaded source codes
 WORKDIR $PSRHOME
@@ -707,7 +718,7 @@ RUN echo "" >> .bashrc && \
     echo "" >> .mysetenv.bash && \
 
     echo "# ds9" >> .mysetenv.bash && \
-    echo "export PATH=\$PATH:\$PSRHOME/ds9-8.3" >> .mysetenv.bash && \
+    echo "export PATH=\$PATH:\$PSRHOME/ds9-8.5" >> .mysetenv.bash && \
     echo "" >> .mysetenv.bash && \
 
     echo "# fv" >> .mysetenv.bash && \
@@ -776,11 +787,11 @@ RUN echo "" >> .bashrc && \
     echo "export C_INCLUDE_PATH=\$C_INCLUDE_PATH:\$DSPSR/install/include" >> .mysetenv.bash && \
     echo "" >> .mysetenv.bash && \
 
-    echo "# clig" >> .mysetenv.bash && \
-    echo "export CLIG=\$PSRHOME/clig" >> .mysetenv.bash && \
-    echo "export PATH=\$PATH:\$CLIG/instal/bin" >> .mysetenv.bash && \
-    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CLIG/instal/lib" >> .mysetenv.bash && \
-    echo "" >> .mysetenv.bash && \
+    #echo "# clig" >> .mysetenv.bash && \
+    #echo "export CLIG=\$PSRHOME/clig" >> .mysetenv.bash && \
+    #echo "export PATH=\$PATH:\$CLIG/instal/bin" >> .mysetenv.bash && \
+    #echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CLIG/instal/lib" >> .mysetenv.bash && \
+    #echo "" >> .mysetenv.bash && \
 
     echo "# PSRSALSA" >> .mysetenv.bash && \
     echo "export PSRSALSA=\$PSRHOME/psrsalsa" >> .mysetenv.bash && \
@@ -865,7 +876,7 @@ RUN echo "" >> .bashrc && \
 
 
 # Update database for locate and run sshd server and expose port 22
-USER root
+#USER root
 RUN sed 's/X11Forwarding yes/X11Forwarding yes\nX11UseLocalhost no/' -i /etc/ssh/sshd_config && \
     echo "if [ -e \/home/psr/.mysetenv.bash ]; then" >> .bashrc && \
     echo "   source \/home/psr/.mysetenv.bash" >> .bashrc && \
