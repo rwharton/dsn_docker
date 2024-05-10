@@ -7,6 +7,8 @@ GPU enabled software use `gpu/Dockerfile`, otherwise use the
 create a docker image, then convert that to a singularity file.  This 
 is a bit roundabout and probably isn't the right strategy for everyone.
 
+This is really great.
+
 ## Software Packages + Libraries
 
 Both Dockerfiles build on an ubuntu 20.04 base and have 
